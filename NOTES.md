@@ -50,10 +50,10 @@
 cd D:\Agent_study\oss-health
 chcp 65001                          # 不加这句，中文输出会乱码
 .\.venv\Scripts\Activate.ps1        # 激活虚拟环境
-python -m oss_health.db             # 自检：现在会提示 SCHEMA 为空，这是对的
+python ingest.py                    # 抓取 12 个仓库并写入 data\oss_health.db
 ```
 
 **关于 `pip install -e .`**：这台机器上构建后端会在临时目录上被权限拦掉，
-所以改用了一个等价办法——`.venv\Lib\site-packages\oss_health_src.pth`
-里写了一行 `src` 的绝对路径，效果和可编辑安装一样（改代码立即生效）。
-换到别的机器上，优先还是用 `pip install -e .`，它更标准。
+所以没有做可编辑安装。现在代码是根目录下的单文件脚本，直接 `python ingest.py` 即可，不需要安装。
+
+换到别的机器上，第一步仍然是建 venv + `pip install requests`。

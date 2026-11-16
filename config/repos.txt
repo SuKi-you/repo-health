@@ -1,20 +1,17 @@
-# 三组「可互相替代」的候选。一行一个 owner/repo，# 后面是注释。
-# 数据源是配置，不是代码 —— 换候选不需要改任何 .py 文件。
-#
-# 为什么是这三组：只有能互相替代，才构成「选择」；只有存在选择，才需要尽调。
-# 随手凑 12 个不相关的库，做出来的排名没有任何决策价值。
+# 结构：一行一个 owner/repo，
+#分组逻辑与依据：每一组里的库，都是干同一件事的竞品。只有能互相替代，才能够构成选择。
 
-# --- 组 1：DataFrame 引擎（数据量变大时换不换） ---
+#组 1：DataFrame 引擎（数据处理工具）
 pandas-dev/pandas
 pola-rs/polars
 dask/dask
 
-# --- 组 2：任务队列（异步任务用什么） ---
+#组 2：任务队列（异步处理工具）
 celery/celery
 rq/rq
 Bogdanp/dramatiq
 
-# --- 组 3：Web 框架与 DB 驱动（服务端选型） ---
+#组 3：Web 框架与 DB 驱动（服务端选型）
 fastapi/fastapi
 encode/httpx
 sqlalchemy/sqlalchemy
