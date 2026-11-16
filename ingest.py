@@ -12,7 +12,7 @@ with open("config/repos.txt",encoding="utf-8") as f:
             REPOS.append(name)
 print("要抓",len(REPOS),"个仓库")
 
-TODAY = date.today().isoformat()
+TODAY = date.today().isoformat()#获取今天的日期，并把它转换成标准格式的文本字符串。
 
 HEADERS = {"User-Agent": "learn"}
 TOKEN = os.environ.get("GITHUB_TOKEN")
@@ -79,7 +79,7 @@ conn.execute("""
     )
 """)
 
-SQL_REPO = """
+SQL = """
 INSERT INTO repos_info VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(date, repo_id) DO UPDATE SET
     stars = excluded.stars, forks = excluded.forks,
@@ -107,6 +107,7 @@ ON CONFLICT(repo_id, login) DO UPDATE SET contributions = excluded.contributions
 """
 
 for name in REPOS:
+    #给爬虫程序上防弹衣：如果Github拒绝了请求，它会自动跳过这个项目，继续抓下一个，从而防止程序崩溃。
     d, code = fetch(f"https://api.github.com/repos/{name}")
     if code != 200:
         print(f"{name:28} 跳过:HTTP{code}")
@@ -116,7 +117,7 @@ for name in REPOS:
     tag = rel["tag_name"] if rel else None
     released_at = rel["published_at"] if rel else None
 
-    conn.execute(SQL_REPO, (TODAY, d["id"], d["full_name"], d.get("language"),
+    conn.execute(SQL, (TODAY, d["id"], d["full_name"], d.get("language"),
                             d["stargazers_count"], d["forks_count"],
                             d["open_issues_count"], d["pushed_at"],
                             tag, released_at))
