@@ -47,9 +47,6 @@ for name in REPOS:
         continue
 
     d=r.json()
-
-    #发版信息。注意这里的 404 跟上面不一样：
-    #上面 404 表示“仓库不存在”，该跳过；这里 404 表示“这个仓库从来没发过 release”，是正常情况。
     rel = requests.get(f"https://api.github.com/repos/{name}/releases/latest",
                        headers={"User-Agent": "learn"})
     if rel.status_code == 200:
