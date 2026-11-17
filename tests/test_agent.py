@@ -1,3 +1,4 @@
+import json
 from datetime import date
 
 import pytest
@@ -22,8 +23,6 @@ class FakeClient:
 
 
 def tool_call(call_id, name, **kwargs):
-    import json
-
     return {
         "tool_calls": [
             {
@@ -78,7 +77,7 @@ def test_cache_hit_never_calls_model():
     assert client.calls == 0
 
 
-def test_full_tool_loop_saves_judgment():
+def test_full_tool_loop_saves_judgment_with_panels():
     conn = cache.connect(":memory:")
     client = FakeClient(
         [
@@ -86,26 +85,44 @@ def test_full_tool_loop_saves_judgment():
             tool_call(
                 "c2", "save_judgment", owner="acme", repo="lib",
                 result="健康", reason="未命中红旗",
+                highlight="下载在涨", panels=["downloads_line", "downloads_weekly"],
             ),
-            {"content": "项目：acme/lib\n结论：健康\n理由：未命中红旗"},
+            {"content": "结论：健康"},
         ]
     )
 
-    out = agent.judge(
-        "https://github.com/acme/lib",
-        client=client,
-        conn=conn,
-        today=TODAY,
-        analyzer=fake_analyzer,
-    )
+    out = agent.judge("https://github.com/acme/lib", client=client, conn=conn,
+                      today=TODAY, analyzer=fake_analyzer)
 
     assert out["cached"] is False
-    assert "健康" in out["answer"]
+    assert out["panels"] == ["downloads_line", "downloads_weekly"]
+    assert out["highlight"] == "下载在涨"
+    assert out["metrics"]["full_name"] == "acme/lib"
     assert client.calls == 3
 
     row = cache.lookup(conn, "acme/lib", TODAY)
     assert row["result"] == "健康"
-    assert row["source"] == "llm"
+    assert row["panels"] == ["downloads_line", "downloads_weekly"]
+    assert row["metrics"]["full_name"] == "acme/lib"
+
+
+def test_unknown_panel_is_dropped():
+    conn = cache.connect(":memory:")
+    client = FakeClient(
+        [
+            tool_call("c1", "analyze_repo", owner="acme", repo="lib"),
+            tool_call(
+                "c2", "save_judgment", owner="acme", repo="lib",
+                result="健康", reason="ok", panels=["radar_chart", "activity_strip"],
+            ),
+            {"content": "结论：健康"},
+        ]
+    )
+
+    out = agent.judge("acme/lib", client=client, conn=conn, today=TODAY,
+                      analyzer=fake_analyzer)
+
+    assert out["panels"] == ["activity_strip"]
 
 
 def test_lookup_tool_reports_miss_then_model_continues():
@@ -116,13 +133,14 @@ def test_lookup_tool_reports_miss_then_model_continues():
             tool_call("c2", "analyze_repo", owner="acme", repo="lib"),
             tool_call(
                 "c3", "save_judgment", owner="acme", repo="lib",
-                result="不健康", reason="发版距今 900 天",
+                result="不健康", reason="发版距今 900 天", panels=["activity_strip"],
             ),
             {"content": "结论：不健康"},
         ]
     )
 
-    out = agent.judge("acme/lib", client=client, conn=conn, today=TODAY, analyzer=fake_analyzer)
+    out = agent.judge("acme/lib", client=client, conn=conn, today=TODAY,
+                      analyzer=fake_analyzer)
 
     assert out["cached"] is False
     assert cache.lookup(conn, "acme/lib", TODAY)["result"] == "不健康"
@@ -137,7 +155,8 @@ def test_invalid_tool_arguments_do_not_crash():
         ]
     )
 
-    out = agent.judge("acme/lib", client=client, conn=conn, today=TODAY, analyzer=fake_analyzer)
+    out = agent.judge("acme/lib", client=client, conn=conn, today=TODAY,
+                      analyzer=fake_analyzer)
     assert out["answer"] == "无法评估"
 
 
@@ -148,7 +167,5 @@ def test_gives_up_after_max_steps():
     )
 
     with pytest.raises(RuntimeError):
-        agent.judge(
-            "acme/lib", client=client, conn=conn, today=TODAY,
-            analyzer=fake_analyzer, max_steps=3,
-        )
+        agent.judge("acme/lib", client=client, conn=conn, today=TODAY,
+                    analyzer=fake_analyzer, max_steps=3)
