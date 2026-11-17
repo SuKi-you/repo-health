@@ -7,10 +7,10 @@ import requests
 REPOS = []
 with open("config/repos.txt",encoding="utf-8") as f:
     for line in f:
-        name = line.strip()
-        if name and not name.startswith("#"):
+        name = line.strip()#把字符串开头和结尾的空格、制表符、换行符都去除
+        if name and not name.startswith("#"):#如果这一行是空的或者是注释，那么直接过滤掉即可
             REPOS.append(name)
-print("要抓",len(REPOS),"个仓库")
+print("抓取",len(REPOS),"个仓库")
 
 TODAY = date.today().isoformat()#获取今天的日期，并把它转换成标准格式的文本字符串。
 
@@ -21,7 +21,7 @@ if TOKEN:
 print("token:", "已配置" if TOKEN else "未配置")
 
 
-def fetch(url):
+def fetch(url):#增强鲁棒性
     for _ in range(6):
         r = requests.get(url, headers=HEADERS)
         if r.status_code == 202:
@@ -78,6 +78,8 @@ conn.execute("""
         PRIMARY KEY (repo_id, login)
     )
 """)
+
+#表的操作逻辑
 
 SQL = """
 INSERT INTO repos_info VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
