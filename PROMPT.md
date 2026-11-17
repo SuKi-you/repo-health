@@ -52,6 +52,29 @@ https://github.com/pandas-dev/pandas/issues/123     →  pandas-dev / pandas
 
 ---
 
+## analyze_repo 返回的字段
+
+| 字段 | 含义 |
+|---|---|
+| `release_age` | 距最新一次发版的天数 |
+| `push_age` | 距最后一次 push 的天数 |
+| `commits_4w` | 最近 4 个完整周的周均 commit 数 |
+| `newest_issue_age` | 样本中最新一条 issue 距今天数 |
+| `median_close` | issue 中位关闭天数（已排除 PR） |
+| `unclosed_ratio` | 样本中未关闭 issue 占比（已排除 PR） |
+| `stuck_days` | 仍未关闭的 issue 平均挂了多久 |
+| `sample_span` | issue 样本覆盖的时间跨度 |
+| `archived` | 作者是否已归档 |
+| `dl_week` | 最近 7 天下载量 |
+| `dl_trend` | 近 4 周相对此前 4 周的下载变化率 |
+| `dl_noise` | 周环比噪声，`dl_trend` 未超出它时不算变化 |
+| `top1_share` | **贡献者**集中度：最大贡献者占前 100 名的比例，与下载无关 |
+| `missing` | 值为 null 的字段名列表 |
+
+`missing` 里的字段表示数据不可得，不是 0。
+
+---
+
 # 判定
 
 ## 熟悉
@@ -95,7 +118,10 @@ https://github.com/pandas-dev/pandas/issues/123     →  pandas-dev / pandas
 了解程度：熟悉 / 不了解
 结论：健康 / 不健康
 理由：熟悉的写命中哪几条红旗；不了解的写四项现状
+备注：（可选，一句话）仅当有值得提醒但不改变结论的信息时写
 ```
+
+**不要用代码块包裹输出**，不要输出 JSON，不要输出表格。
 
 缓存命中时：
 
