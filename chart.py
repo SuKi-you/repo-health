@@ -15,7 +15,7 @@ import numpy as np
 plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "Noto Sans CJK SC", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
 
-DEFAULT_PANELS = ["downloads_line", "downloads_weekly"]
+DEFAULT_PANELS = ["downloads_line", "commits_weekly"]
 MAX_PANELS = 2
 
 COLOR_OK = "#1a7f37"
@@ -50,28 +50,12 @@ def panel_downloads_line(ax, series, metrics, color):
     average = [np.mean(values[max(0, i - 6):i + 1]) for i in range(len(values))]
     ax.plot(dates, average, color="#1f6feb", linewidth=2.4, label="7 日均线")
     ax.legend(fontsize=8, frameon=False, loc="upper left")
+    ax.text(0.98, 0.94, f"181 天合计 {human(sum(values))} 次", transform=ax.transAxes,
+            ha="right", va="top", fontsize=9.5, color="#1f6feb", fontweight="bold",
+            bbox=dict(facecolor="white", edgecolor="none", alpha=0.85))
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: human(v)))
     ax.tick_params(axis="x", rotation=30, labelsize=8)
     return "PyPI 下载量（近 181 天）"
-
-
-def panel_downloads_weekly(ax, series, metrics, color):
-    rows = _series_values(series, "downloads")
-    if not rows:
-        _empty(ax, "无下载数据")
-        return "每周下载总量"
-
-    values = [n for _, n in rows]
-    chunks = [sum(values[i:i + 7]) for i in range(0, len(values), 7)][-26:]
-    ax.bar(range(len(chunks)), chunks, color=color, width=0.75)
-    ax.set_xticks(range(0, len(chunks), 4))
-    ax.set_xticklabels([f"{-len(chunks) + i + 1}" for i in range(0, len(chunks), 4)], fontsize=8)
-    ax.set_xlabel("周（相对今天的周数）", fontsize=8)
-    ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: human(v)))
-    ax.text(0.02, 0.94, f"26 周合计 {human(sum(chunks))} 次", transform=ax.transAxes,
-            ha="left", va="top", fontsize=10, color=color, fontweight="bold",
-            bbox=dict(facecolor="white", edgecolor="none", alpha=0.85))
-    return "每周下载总量（近 26 周）"
 
 
 def panel_activity_strip(ax, series, metrics, color):
@@ -123,7 +107,6 @@ def _empty(ax, message):
 
 PANELS = {
     "downloads_line": panel_downloads_line,
-    "downloads_weekly": panel_downloads_weekly,
     "activity_strip": panel_activity_strip,
     "commits_weekly": panel_commits_weekly,
 }
@@ -132,13 +115,22 @@ PANELS = {
 def resolve_panels(panels):
     if not isinstance(panels, (list, tuple)):
         return list(DEFAULT_PANELS)
+
     valid = [name for name in panels if name in PANELS]
     if not valid:
         return list(DEFAULT_PANELS)
+
     seen = []
     for name in valid:
         if name not in seen:
             seen.append(name)
+
+    for name in DEFAULT_PANELS:
+        if len(seen) >= MAX_PANELS:
+            break
+        if name not in seen:
+            seen.append(name)
+
     return seen[:MAX_PANELS]
 
 
@@ -198,3 +190,4 @@ def render(path, repo, verdict, reason, metrics, series, panels=None, highlight=
     plt.savefig(target, dpi=130, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     return str(target)
+

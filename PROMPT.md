@@ -108,8 +108,7 @@ https://github.com/pandas-dev/pandas/issues/123     →  pandas-dev / pandas
 
 | 面板 | 画什么 | 用它的场景 |
 |---|---|---|
-| `downloads_line` | 181 天日下载折线 | 证明「还在被使用」，或证明「下载在崩」 |
-| `downloads_weekly` | 26 周下载总量柱状 | 证明「使用稳定」，或证明「几乎没人用」 |
+| `downloads_line` | 181 天日下载折线 + 7 日均线 | 证明「还在被使用」，或证明「下载在崩」 |
 | `activity_strip` | 52 周开发活动格 | 证明「一年没动静」，或证明「持续有活动」 |
 | `commits_weekly` | 52 周 commit 柱状 | 活跃度有明显起伏时用 |
 
@@ -119,7 +118,7 @@ https://github.com/pandas-dev/pandas/issues/123     →  pandas-dev / pandas
 - 判「健康」→ 选能证明它还在被使用、还在被维护的面板。
 - 判「不健康」→ 选能证明问题确实存在的面板。
 - 最多两个，按重要性排序。
-- 拿不准就选 `downloads_line` + `downloads_weekly`，这两个适用面最广。
+- 拿不准就选 `downloads_line` + `commits_weekly`，这两个适用面最广。
 
 ---
 

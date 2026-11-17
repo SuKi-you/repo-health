@@ -12,7 +12,7 @@ PROMPT_FILE = Path("PROMPT.md")
 NAME_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 GH_RE = re.compile(r"github\.com/([^/\s]+)/([^/\s?#]+)")
 
-PANEL_TYPES = ["downloads_line", "downloads_weekly", "activity_strip", "commits_weekly"]
+PANEL_TYPES = ["downloads_line", "activity_strip", "commits_weekly"]
 
 TOOLS = [
     {
