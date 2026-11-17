@@ -85,7 +85,7 @@ def test_full_tool_loop_saves_judgment_with_panels():
             tool_call(
                 "c2", "save_judgment", owner="acme", repo="lib",
                 result="健康", reason="未命中红旗",
-                highlight="下载在涨", panels=["downloads_line", "commits_weekly"],
+                highlight="下载在涨", panels=["downloads_line", "downloads_line"],
             ),
             {"content": "结论：健康"},
         ]
@@ -95,14 +95,14 @@ def test_full_tool_loop_saves_judgment_with_panels():
                       today=TODAY, analyzer=fake_analyzer)
 
     assert out["cached"] is False
-    assert out["panels"] == ["downloads_line", "commits_weekly"]
+    assert out["panels"] == ["downloads_line", "downloads_line"]
     assert out["highlight"] == "下载在涨"
     assert out["metrics"]["full_name"] == "acme/lib"
     assert client.calls == 3
 
     row = cache.lookup(conn, "acme/lib", TODAY)
     assert row["result"] == "健康"
-    assert row["panels"] == ["downloads_line", "commits_weekly"]
+    assert row["panels"] == ["downloads_line", "downloads_line"]
     assert row["metrics"]["full_name"] == "acme/lib"
 
 
@@ -169,4 +169,5 @@ def test_gives_up_after_max_steps():
     with pytest.raises(RuntimeError):
         agent.judge("acme/lib", client=client, conn=conn, today=TODAY,
                     analyzer=fake_analyzer, max_steps=3)
+
 

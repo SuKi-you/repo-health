@@ -33,7 +33,7 @@ def test_render_creates_file():
 
 def test_render_two_panels():
     out = chart.render(TMP / "chart_two.png", "a/b", "不健康", "0 提交", METRICS, SERIES,
-                       ["activity_strip", "commits_weekly"], highlight="52 周 0 提交")
+                       ["activity_strip", "downloads_line"], highlight="52 周 0 提交")
     assert Path(out).exists()
 
 
@@ -46,23 +46,21 @@ def test_empty_panels_use_default():
     assert chart.resolve_panels(None) == chart.DEFAULT_PANELS
 
 
-def test_panels_dedup_and_capped():
+def test_panels_order_is_fixed():
     chosen = chart.resolve_panels(
-        ["downloads_line", "downloads_line", "activity_strip", "commits_weekly"]
+        ["downloads_line", "downloads_line", "activity_strip", "activity_strip"]
     )
-    assert chosen == ["downloads_line", "activity_strip"]
+    assert chosen == ["activity_strip", "downloads_line"]
 
 
 def test_single_panel_is_topped_up():
-    chosen = chart.resolve_panels(["activity_strip"])
-    assert chosen[0] == "activity_strip"
-    assert len(chosen) == 2
-    assert chosen[1] in chart.DEFAULT_PANELS
+    chosen = chart.resolve_panels(["downloads_line"])
+    assert chosen == ["activity_strip", "downloads_line"]
 
 
 def test_render_without_series_does_not_crash():
     out = chart.render(TMP / "chart_empty.png", "a/b", "不健康", "无数据", METRICS, {},
-                       ["activity_strip", "commits_weekly"])
+                       ["activity_strip", "downloads_line"])
     assert Path(out).exists()
 
 
@@ -70,4 +68,5 @@ def test_human_formats():
     assert chart.human(1234) == "1.2千"
     assert chart.human(1234567) == "123万"
     assert chart.human(None) == "—"
+
 

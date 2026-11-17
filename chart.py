@@ -15,7 +15,7 @@ import numpy as np
 plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "Noto Sans CJK SC", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
 
-DEFAULT_PANELS = ["downloads_line", "commits_weekly"]
+DEFAULT_PANELS = ["activity_strip", "downloads_line"]
 MAX_PANELS = 2
 
 COLOR_OK = "#1a7f37"
@@ -48,10 +48,10 @@ def panel_downloads_line(ax, series, metrics, color):
     values = [n for _, n in rows]
     ax.plot(dates, values, color="#c9d6e3", linewidth=0.9, label="日下载")
     average = [np.mean(values[max(0, i - 6):i + 1]) for i in range(len(values))]
-    ax.plot(dates, average, color="#1f6feb", linewidth=2.4, label="7 日均线")
+    ax.plot(dates, average, color=color, linewidth=2.4, label="7 日均线")
     ax.legend(fontsize=8, frameon=False, loc="upper left")
     ax.text(0.98, 0.94, f"181 天合计 {human(sum(values))} 次", transform=ax.transAxes,
-            ha="right", va="top", fontsize=9.5, color="#1f6feb", fontweight="bold",
+            ha="right", va="top", fontsize=9.5, color=color, fontweight="bold",
             bbox=dict(facecolor="white", edgecolor="none", alpha=0.85))
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: human(v)))
     ax.tick_params(axis="x", rotation=30, labelsize=8)
@@ -66,8 +66,14 @@ def panel_activity_strip(ax, series, metrics, color):
 
     totals = [w.get("total", 0) for w in rows]
     peak = max(max(totals), 1)
+    base = matplotlib.colors.to_rgb(color)
+    neutral = (0.90, 0.90, 0.90)
     for i, value in enumerate(totals):
-        face = "#e6e6e6" if value == 0 else plt.cm.Blues(0.35 + 0.6 * (value / peak))
+        if value == 0:
+            face = "#e6e6e6"
+        else:
+            t = 0.3 + 0.7 * (value / peak)
+            face = tuple(neutral[j] + (base[j] - neutral[j]) * t for j in range(3))
         ax.add_patch(plt.Rectangle((i, 0.46), 0.85, 0.26, facecolor=face, edgecolor="none"))
 
     ax.set_xlim(-1, len(totals) + 0.5)
@@ -85,53 +91,33 @@ def panel_activity_strip(ax, series, metrics, color):
     return "近 52 周的开发活动｜每一格是一周"
 
 
-def panel_commits_weekly(ax, series, metrics, color):
-    rows = _series_values(series, "weeks")
-    if not rows:
-        _empty(ax, "无 commit 数据")
-        return "每周 commit 数"
-
-    totals = [w.get("total", 0) for w in rows]
-    labels = [datetime.fromtimestamp(w["week"]).strftime("%m-%d") for w in rows]
-    ax.bar(range(len(totals)), totals, color=color, width=0.75)
-    ax.set_xticks(range(0, len(labels), 8))
-    ax.set_xticklabels(labels[::8], fontsize=8)
-    ax.set_ylim(0, max(max(totals) * 1.15, 1))
-    return "每周 commit 数（近 52 周）"
-
-
 def _empty(ax, message):
     ax.text(0.5, 0.5, message, ha="center", va="center", fontsize=10, color="#999999")
     ax.axis("off")
 
 
 PANELS = {
-    "downloads_line": panel_downloads_line,
     "activity_strip": panel_activity_strip,
-    "commits_weekly": panel_commits_weekly,
+    "downloads_line": panel_downloads_line,
 }
+
+LAYOUT_ORDER = ["activity_strip", "downloads_line"]
 
 
 def resolve_panels(panels):
-    if not isinstance(panels, (list, tuple)):
-        return list(DEFAULT_PANELS)
+    wanted = set()
+    if isinstance(panels, (list, tuple)):
+        wanted = {name for name in panels if name in PANELS}
 
-    valid = [name for name in panels if name in PANELS]
-    if not valid:
-        return list(DEFAULT_PANELS)
+    if not wanted:
+        wanted = set(DEFAULT_PANELS)
 
-    seen = []
-    for name in valid:
-        if name not in seen:
-            seen.append(name)
-
-    for name in DEFAULT_PANELS:
-        if len(seen) >= MAX_PANELS:
+    for name in LAYOUT_ORDER:
+        if len(wanted) >= MAX_PANELS:
             break
-        if name not in seen:
-            seen.append(name)
+        wanted.add(name)
 
-    return seen[:MAX_PANELS]
+    return [name for name in LAYOUT_ORDER if name in wanted][:MAX_PANELS]
 
 
 def render(path, repo, verdict, reason, metrics, series, panels=None, highlight=""):
@@ -190,4 +176,5 @@ def render(path, repo, verdict, reason, metrics, series, panels=None, highlight=
     plt.savefig(target, dpi=130, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     return str(target)
+
 
