@@ -12,6 +12,14 @@ with open("config/repos.txt",encoding="utf-8") as f:
             REPOS.append(name)
 print("抓取",len(REPOS),"个仓库")
 
+PYPI = {}
+with open("config/pypi.txt",encoding="utf-8") as f:
+    for line in f:
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            repo, pkg = line.split("=", 1)
+            PYPI[repo.strip()] = pkg.strip()
+
 TODAY = date.today().isoformat()#获取今天的日期，并把它转换成标准格式的文本字符串。
 
 HEADERS = {"User-Agent": "learn"}
@@ -20,17 +28,25 @@ if TOKEN:
     HEADERS["Authorization"] = f"Bearer {TOKEN}"
 print("token:", "已配置" if TOKEN else "未配置")
 
+PLAIN = {"User-Agent": "learn"}
 
-def fetch(url):#增强鲁棒性
+
+def fetch(url, headers=None):#增强鲁棒性
+    code = None
     for _ in range(6):
-        r = requests.get(url, headers=HEADERS)
-        if r.status_code == 202:
+        try:
+            r = requests.get(url, headers=headers or HEADERS, timeout=60)
+        except requests.RequestException:
             time.sleep(3)
             continue
-        if r.status_code == 200:
+        code = r.status_code
+        if code == 200:
             return r.json(), 200
-        return None, r.status_code
-    return None, 202
+        if code in (202, 429) or code >= 500:
+            time.sleep(5)
+            continue
+        return None, code
+    return None, code
 
 
 conn = sqlite3.connect("data/oss_health.db")
@@ -46,9 +62,13 @@ conn.execute("""
         pushed_at          TEXT,
         latest_release_tag TEXT,
         latest_release_at  TEXT,
+        archived           INTEGER,
         PRIMARY KEY (date, repo_id)
     )
 """)
+cols = [c[1] for c in conn.execute("PRAGMA table_info(repos_info)")]
+if "archived" not in cols:
+    conn.execute("ALTER TABLE repos_info ADD COLUMN archived INTEGER")
 conn.execute("""
     CREATE TABLE IF NOT EXISTS issues (
         repo_id         INTEGER NOT NULL,
@@ -78,16 +98,25 @@ conn.execute("""
         PRIMARY KEY (repo_id, login)
     )
 """)
+conn.execute("""
+    CREATE TABLE IF NOT EXISTS downloads (
+        date      TEXT    NOT NULL,
+        package   TEXT    NOT NULL,
+        downloads INTEGER,
+        PRIMARY KEY (date, package)
+    )
+""")
 
 #表的操作逻辑
 
 SQL = """
-INSERT INTO repos_info VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO repos_info VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(date, repo_id) DO UPDATE SET
     stars = excluded.stars, forks = excluded.forks,
     open_issues = excluded.open_issues, pushed_at = excluded.pushed_at,
     latest_release_tag = excluded.latest_release_tag,
-    latest_release_at  = excluded.latest_release_at
+    latest_release_at  = excluded.latest_release_at,
+    archived           = excluded.archived
 """
 
 SQL_ISSUE = """
@@ -108,6 +137,11 @@ INSERT INTO contributors VALUES (?, ?, ?)
 ON CONFLICT(repo_id, login) DO UPDATE SET contributions = excluded.contributions
 """
 
+SQL_DL = """
+INSERT INTO downloads VALUES (?, ?, ?)
+ON CONFLICT(date, package) DO UPDATE SET downloads = excluded.downloads
+"""
+
 for name in REPOS:
     #给爬虫程序上防弹衣：如果Github拒绝了请求，它会自动跳过这个项目，继续抓下一个，从而防止程序崩溃。
     d, code = fetch(f"https://api.github.com/repos/{name}")
@@ -122,7 +156,7 @@ for name in REPOS:
     conn.execute(SQL, (TODAY, d["id"], d["full_name"], d.get("language"),
                             d["stargazers_count"], d["forks_count"],
                             d["open_issues_count"], d["pushed_at"],
-                            tag, released_at))
+                            tag, released_at, d.get("archived")))
 
     issues, _ = fetch(f"https://api.github.com/repos/{name}/issues?state=all&per_page=100")
     issues = issues or []
@@ -142,7 +176,17 @@ for name in REPOS:
     for c in contribs:
         conn.execute(SQL_CONTRIB, (d["id"], c.get("login"), c.get("contributions")))
 
-    print(f"{name:28} {d['stargazers_count']:>7} stars  {str(tag):12} issues={len(issues):3} weeks={len(commits):2} contribs={len(contribs):3}")
+    pkg = PYPI.get(name)
+    dl_rows = 0
+    if pkg:
+        data, _ = fetch(f"https://pypistats.org/api/packages/{pkg}/overall", headers=PLAIN)
+        for x in (data or {}).get("data", []):
+            if x["category"] == "without_mirrors":
+                conn.execute(SQL_DL, (x["date"], pkg, x["downloads"]))
+                dl_rows += 1
+        time.sleep(1)
+
+    print(f"{name:28} {d['stargazers_count']:>7} stars  {str(tag):12} issues={len(issues):3} weeks={len(commits):2} contribs={len(contribs):3} dl={dl_rows:3}")
 
 conn.commit()
 

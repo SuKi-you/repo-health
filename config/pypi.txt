@@ -1,0 +1,12 @@
+pandas-dev/pandas = pandas
+pola-rs/polars = polars
+dask/dask = dask
+celery/celery = celery
+rq/rq = rq
+Bogdanp/dramatiq = dramatiq
+fastapi/fastapi = fastapi
+encode/httpx = httpx
+sqlalchemy/sqlalchemy = sqlalchemy
+psycopg/psycopg = psycopg
+coleifer/peewee = peewee
+pydantic/pydantic = pydantic
