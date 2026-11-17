@@ -1,4 +1,4 @@
-[build-system]
+﻿[build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
@@ -7,7 +7,7 @@ name = "oss-health"
 version = "0.1.0"
 description = "开源组件健康度尽调：判断哪个库值得用在生产"
 requires-python = ">=3.10"
-dependencies = ["requests>=2.31", "matplotlib>=3.8"]
+dependencies = ["requests>=2.31", "matplotlib>=3.8", "flask>=3.0"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7.4", "ruff>=0.1"]
@@ -19,3 +19,4 @@ addopts = "-p no:cacheprovider"
 
 [tool.ruff]
 line-length = 100
+

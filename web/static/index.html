@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>oss-health · 开源项目健康度</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="nav">
+  <span class="brand">oss-health</span>
+  <span class="tagline">开源项目健康度评估</span>
+</header>
+
+<main id="app">
+
+  <section id="search" class="search">
+    <h1>开源项目健康度</h1>
+    <p class="sub">输入一个 GitHub 仓库链接，判断它未来两年会不会成为你的负担</p>
+
+    <form id="form" autocomplete="off">
+      <input id="url" type="text" spellcheck="false"
+             placeholder="https://github.com/pandas-dev/pandas">
+      <button id="start" type="submit">START</button>
+    </form>
+
+    <p id="error" class="error" hidden></p>
+  </section>
+
+  <section id="result" class="result" hidden>
+    <div class="result-head">
+      <div>
+        <div id="repo" class="repo"></div>
+        <div id="verdict" class="verdict"></div>
+      </div>
+      <button id="toggle" class="ghost" type="button">指标数据</button>
+    </div>
+
+    <div class="charts">
+      <div class="card">
+        <div class="card-title">近 52 周开发活动</div>
+        <div id="activity"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">PyPI 下载量（近 181 天）</div>
+        <div id="downloads"></div>
+      </div>
+    </div>
+
+    <div id="metrics" class="metrics" hidden></div>
+
+    <div class="foot">
+      <span id="stamp"></span>
+      <button id="again" class="link" type="button">查另一个</button>
+    </div>
+  </section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
