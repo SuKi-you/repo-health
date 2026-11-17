@@ -1,4 +1,4 @@
-﻿[build-system]
+[build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
@@ -19,4 +19,3 @@ addopts = "-p no:cacheprovider"
 
 [tool.ruff]
 line-length = 100
-
