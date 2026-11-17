@@ -180,12 +180,10 @@ def build_metrics(raw, today=None):
         "dl_week": week_total,
         "dl_trend": trend,
         "dl_noise": noise,
-        "star_growth": None,
         "top1_share": (top1 / total_contrib) if total_contrib else None,
     }
 
     missing = [k for k, v in metrics.items() if v is None]
-    missing.append("star_growth")
     metrics["missing"] = sorted(set(missing))
     return metrics
 

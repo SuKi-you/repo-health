@@ -84,10 +84,10 @@ def test_download_week_and_trend():
     assert m["dl_week"] == 7000
 
 
-def test_star_growth_always_missing():
+def test_complete_data_has_no_missing():
     m = analyze.build_metrics(base_raw(), TODAY)
-    assert m["star_growth"] is None
-    assert "star_growth" in m["missing"]
+    assert m["missing"] == []
+    assert "star_growth" not in m
 
 
 def test_no_issues_marks_missing():
