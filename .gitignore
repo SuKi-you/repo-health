@@ -26,3 +26,6 @@ data/
 # 编辑器
 .vscode/
 .idea/
+
+# matplotlib 缓存
+.cache/
