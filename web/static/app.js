@@ -52,7 +52,7 @@ function drawActivity(el, weeks, color) {
   const rects = totals.map((v, i) => {
     const fill = v === 0 ? "#1a231e" : mix("#16211b", color, 0.28 + 0.72 * (v / peak));
     const x = i * cell * (1 + gap);
-    return `<rect x="${x.toFixed(2)}" y="0" width="${cell.toFixed(2)}" height="${H}" fill="${fill}"/>`;
+    return `<rect x="${x.toFixed(2)}" y="0" width="${cell.toFixed(2)}" height="${H}" fill="${fill}"><title>${v} 次提交</title></rect>`;
   }).join("");
 
   el.innerHTML = `
@@ -71,14 +71,16 @@ function drawDownloads(el, downloads, color) {
   }
 
   const values = downloads.map((d) => d[1]);
+  const dates = downloads.map((d) => d[0]);
   const total = values.reduce((a, b) => a + b, 0);
   const W = 660, H = 230, pad = 8;
   const min = Math.min(...values);
   const max = Math.max(...values);
   const span = max - min || 1;
+  const step = (W - 2 * pad) / (values.length - 1);
 
   const pts = values.map((v, i) => {
-    const x = pad + (i * (W - 2 * pad)) / (values.length - 1);
+    const x = pad + i * step;
     const y = H - pad - ((v - min) / span) * (H - 2 * pad);
     return [x, y];
   });
@@ -91,16 +93,62 @@ function drawDownloads(el, downloads, color) {
     <div class="card-head">
       <span class="chart-total">181 天合计 ${human(total)} 次</span>
     </div>
-    <svg viewBox="0 0 ${W} ${H}" style="height:230px">
-      <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${color}" stop-opacity="0.22"/>
-        <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
-      </linearGradient></defs>
-      <path d="${area}" fill="url(#${gid})"/>
-      <path d="${line}" fill="none" stroke="${color}" stroke-width="2.2"
-            stroke-linejoin="round" stroke-linecap="round"/>
-    </svg>
+    <div class="chart-wrap">
+      <svg viewBox="0 0 ${W} ${H}" style="height:230px">
+        <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${color}" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+        </linearGradient></defs>
+        <path d="${area}" fill="url(#${gid})"/>
+        <path d="${line}" fill="none" stroke="${color}" stroke-width="2.2"
+              stroke-linejoin="round" stroke-linecap="round"/>
+        <g class="cursor" style="opacity:0">
+          <line class="cursor-line" x1="0" y1="0" x2="0" y2="${H}"
+                stroke="${color}" stroke-opacity="0.5" stroke-dasharray="3 4" stroke-width="1"/>
+          <circle class="cursor-dot" r="4.5" fill="${color}" stroke="#0f1512" stroke-width="2"/>
+        </g>
+      </svg>
+      <div class="tip" hidden></div>
+    </div>
   `;
+
+  const svg = el.querySelector("svg");
+  const cursor = el.querySelector(".cursor");
+  const cursorLine = el.querySelector(".cursor-line");
+  const cursorDot = el.querySelector(".cursor-dot");
+  const tip = el.querySelector(".tip");
+
+  function move(event) {
+    const box = svg.getBoundingClientRect();
+    const x = ((event.clientX - box.left) / box.width) * W;
+    let index = Math.round((x - pad) / step);
+    index = Math.max(0, Math.min(values.length - 1, index));
+
+    const [px, py] = pts[index];
+    cursor.style.opacity = 1;
+    cursorLine.setAttribute("x1", px);
+    cursorLine.setAttribute("x2", px);
+    cursorDot.setAttribute("cx", px);
+    cursorDot.setAttribute("cy", py);
+
+    tip.hidden = false;
+    tip.innerHTML = `<span class="tip-date">${dates[index]}</span><span class="tip-val">${human(values[index])} 次</span>`;
+
+    const left = (px / W) * box.width;
+    const top = (py / H) * box.height;
+    tip.style.left = left + "px";
+    tip.style.top = top + "px";
+  }
+
+  svg.addEventListener("mousemove", move);
+  svg.addEventListener("touchmove", (e) => {
+    if (e.touches[0]) move(e.touches[0]);
+  }, { passive: true });
+  svg.addEventListener("mouseleave", () => {
+    cursor.style.opacity = 0;
+    tip.hidden = true;
+  });
+
   return total;
 }
 

@@ -231,6 +231,31 @@ button:active { transform: translateY(1px); }
   font-weight: 600;
 }
 
+.chart-wrap { position: relative; }
+
+.chart-wrap svg { cursor: crosshair; }
+
+.tip {
+  position: absolute;
+  transform: translate(-50%, -170%);
+  background: #131c17;
+  border: 1px solid #2b3d33;
+  border-radius: 8px;
+  padding: 7px 11px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .55);
+  z-index: 5;
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.tip-date { color: var(--muted); }
+
+.tip-val { color: var(--accent); font-weight: 600; }
+
 .card-head {
   display: flex;
   align-items: baseline;
