@@ -1,4 +1,4 @@
-# repo-health
+# GitHub Open Source Project Health Check
 
 开源仓库健康度调查。输入一个 GitHub 仓库，判断它还能不能被长期依赖。
 
