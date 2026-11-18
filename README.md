@@ -1,4 +1,4 @@
-# oss-health
+# repo-health
 
 开源仓库健康度调查。输入一个 GitHub 仓库，判断它还能不能被长期依赖。
 
@@ -14,43 +14,6 @@
 从 GitHub 和 PyPI 抓取 12 项数据——发版节奏、提交活跃度、issue 响应速度、未关闭积压、下载趋势、贡献者集中度、是否归档——按固定规则输出结论。
 
 针对知名项目，用 5 条红旗做反证检验；对不熟悉的项目，按维护、响应、存活、使用四个维度综合判断。
-
-## 快速开始
-
-```powershell
-python -m venv .venv
-.venv\Scripts\activate
-pip install -e .
-
-setx GITHUB_TOKEN "ghp_xxx"    # 只读，用于抓取 GitHub 数据
-setx LLM_API_KEY "sk-xxx"      # 用于生成判定
-```
-
-重开终端后：
-
-```powershell
-python agent.py https://github.com/pandas-dev/pandas
-```
-
-带上图表：
-
-```powershell
-python agent.py pandas-dev/pandas --chart card.png
-```
-
-批量：
-
-```powershell
-python batch.py repos.txt
-```
-
-网页：
-
-```powershell
-python web\server.py
-```
-
-然后在本地浏览器打开 `127.0.0.1:7860`
 
 ## 项目结构
 
