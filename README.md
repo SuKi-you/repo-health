@@ -50,7 +50,7 @@ python batch.py repos.txt
 python web\server.py
 ```
 
-打开 http://127.0.0.1:7860
+然后在本地浏览器打开 `127.0.0.1:7860`
 
 ## 项目结构
 
@@ -67,4 +67,4 @@ python web\server.py
 
 ## 技术栈
 
-Python 3.10+ · requests · Flask · matplotlib
+Python
